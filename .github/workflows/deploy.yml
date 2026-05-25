@@ -1,0 +1,53 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: 16.171.55.221
+          username: ubuntu
+
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+            if [ -z "$DEPLOY_PATH" ]; then
+              echo "DEPLOY_PATH secret is not set"
+              exit 1
+            fi
+
+            cd "$DEPLOY_PATH"
+
+            if [ ! -f .env ]; then
+              echo ".env missing on server — copy from .env.example and configure secrets"
+              exit 1
+            fi
+
+            docker network inspect proxy-net >/dev/null 2>&1 \
+              || docker network create proxy-net
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            docker compose pull --ignore-pull-failures 2>/dev/null || true
+            docker compose up -d --build --remove-orphans
+
+            docker compose ps
