@@ -1,0 +1,39 @@
+services:
+  ai-service:
+    build: .
+    container_name: pos-ai-service
+    # Comment out ports so it's hidden from the host network layer
+    # ports:
+    #   - "8000:8000"
+    expose:
+      - "8000" # Exposes port 8000 ONLY inside the Docker network plane
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+    networks:
+      - proxy-net # Joins the global proxy network
+
+  postgres:
+    image: postgres:16
+    container_name: pos-ai-db
+    environment:
+      POSTGRES_DB: pos_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    # Comment out database ports so hackers can't scan your DB
+    # ports:
+    #   - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - proxy-net
+
+volumes:
+  postgres_data:
+
+networks:
+  proxy-net:
+    external: true # References the existing global proxy network
