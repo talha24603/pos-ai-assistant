@@ -21,26 +21,21 @@ jobs:
         with:
           host: 16.171.55.221
           username: ubuntu
-
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script_stop: true
+          port: 22
+          sync: true
           script: |
             set -euo pipefail
 
-            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
-            if [ -z "$DEPLOY_PATH" ]; then
-              echo "DEPLOY_PATH secret is not set"
-              exit 1
-            fi
-
-            cd "$DEPLOY_PATH"
+            # Hardcoded path directly to your new folder on the VPS
+            cd ~/pos-ai-assistant
 
             if [ ! -f .env ]; then
-              echo ".env missing on server — copy from .env.example and configure secrets"
+              echo "❌ .env missing on server — copy from .env.example and configure secrets"
               exit 1
             fi
 
+            # Safe check for external proxy net network
             docker network inspect proxy-net >/dev/null 2>&1 \
               || docker network create proxy-net
 
