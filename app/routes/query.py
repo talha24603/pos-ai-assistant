@@ -8,7 +8,6 @@ from app.services.answer_generator import generate_answer
 
 router = APIRouter()
 
-
 @router.post("/query")
 def query_data(payload: QueryRequest):
 
