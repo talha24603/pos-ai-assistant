@@ -2,6 +2,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Install CPU-only PyTorch to save massive disk space (avoiding heavy CUDA dependencies)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
