@@ -2,7 +2,7 @@ from fastapi import FastAPI
 # Load .env for local development if available
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(override=True)
 except Exception:
     pass
 
